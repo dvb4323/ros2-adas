@@ -25,7 +25,10 @@ def main():
         pt.location.z += 0.5
         vehicle = world.try_spawn_actor(veh_bp, pt)
         if vehicle:
-            vehicle.set_autopilot(True)
+            # 1. Connect to the Traffic Manager
+            tm = client.get_trafficmanager(8005)
+            # 2. Tell the vehicle to listen to the TM
+            vehicle.set_autopilot(True, tm.get_port())
             print(f"Spawned vehicle ID: {vehicle.id}")
             break
 

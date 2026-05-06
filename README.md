@@ -75,3 +75,16 @@ colcon build --packages-select lane_detection --parallel-workers 1
 source install/setup.bash
 ros2 run lane_detection lane_detector
 ```
+
+### Check for image processing result
+
+```bash
+eog /tmp/frame.jpg
+eog /tmp/edges.jpg
+eot /tmp/roi.jpg
+```
+
+### Lane Detection Pipeline
+
+Explained in docs/Lane Detection Pipeline.pdf
+
