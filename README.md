@@ -62,3 +62,16 @@ ros2 topic list
 /rosout
 /tf
 ```
+
+### Package creation
+
+```bash
+cd ~/ros2-adas/ros2-adas/src
+ros2 pkg create lane_detection \
+  --build-type ament_python \
+  --dependencies rclpy sensor_msgs cv_bridge
+cd ~/ros2-adas/ros2-adas
+colcon build --packages-select lane_detection --parallel-workers 1
+source install/setup.bash
+ros2 run lane_detection lane_detector
+```

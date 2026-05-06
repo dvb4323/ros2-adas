@@ -25,6 +25,7 @@ def main():
         pt.location.z += 0.5
         vehicle = world.try_spawn_actor(veh_bp, pt)
         if vehicle:
+            vehicle.set_autopilot(True)
             print(f"Spawned vehicle ID: {vehicle.id}")
             break
 
