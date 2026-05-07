@@ -9,6 +9,19 @@ def main():
 
     world = client.get_world()
     print("Connected to CARLA")
+    
+    settings = world.get_settings()
+    settings.synchronous_mode = True # Server waits for script
+    settings.fixed_delta_seconds = 0.05 # 20 FPS
+    world.apply_settings(settings)
+    
+    # Clean up all existing vehicles and sensors before starting
+    actors = world.get_actors()
+    for actor in actors.filter('vehicle.*'):
+        actor.destroy()
+    for actor in actors.filter('sensor.*'):
+        actor.destroy()
+    print("Cleaned up old actors.")
 
     bp_lib = world.get_blueprint_library()
 
@@ -27,6 +40,7 @@ def main():
         if vehicle:
             # 1. Connect to the Traffic Manager
             tm = client.get_trafficmanager(8005)
+            tm.set_synchronous_mode(True)
             # 2. Tell the vehicle to listen to the TM
             vehicle.set_autopilot(True, tm.get_port())
             print(f"Spawned vehicle ID: {vehicle.id}")
@@ -65,22 +79,41 @@ def main():
     print("Now check: ros2 topic list")
 
     try:
+        print("Monitoring vehicle telemetry... (Ctrl+C to stop)")
         while True:
-            world.wait_for_tick()  # IMPORTANT: async mode safe
-            time.sleep(0.05)
+            world.tick() # Advance the simulation
+            v = vehicle.get_velocity()
+            l = vehicle.get_location()
+            import math
+            speed = 3.6 * math.sqrt(v.x**2 + v.y**2 + v.z**2)
+            
+            # Check if the car is being held by a traffic light
+            state = vehicle.get_traffic_light_state() 
+            # Returns: Red, Yellow, Green, Off, or Unknown
+            
+            print(f"Loc: {l.x:.1f}, {l.y:.1f} | Speed: {speed:.2f} km/h | Light: {state}", end="\r")
+            
+            # Use for asynchronous mode:
+            # world.wait_for_tick()
+            # time.sleep(0.1)
 
     except KeyboardInterrupt:
         print("\nStopping...")
 
     finally:
         print("Cleaning up...")
+        
+        # 1. ALWAYS disable synchronous mode before exiting
+        settings = world.get_settings()
+        settings.synchronous_mode = False
+        settings.fixed_delta_seconds = None
+        world.apply_settings(settings)
 
+        # 2. Destroy actors
         camera.stop()
         camera.destroy()
         vehicle.destroy()
-
         print("Done.")
-
 
 if __name__ == '__main__':
     main()

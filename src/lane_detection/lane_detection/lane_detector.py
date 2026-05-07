@@ -15,7 +15,7 @@ class LaneDetector(Node):
 
         self.subscription = self.create_subscription(
             Image,
-            '/carla/actor40/front_cam/image',  # <-- update this
+            '/carla/actor29/front_cam/image',  # <-- update this
             self.image_callback,
             10
         )

@@ -41,13 +41,14 @@ source install/setup.bash
 
 ```bash
 cd ~/CARLA_0.9.16
-./CarlaUE4.sh -quality-level=Low -RenderOffScreen -nosound -windowed -ResX=32 -ResY=32 -benchmark -fps=10 --ros2
+./CarlaUE4.sh -quality-level=Low -RenderOffScreen -nosound -windowed -ResX=320 -ResY=320 -benchmark -fps=20 --ros2
 cd PythonAPI/examples
 ```
 
-- Copy the test script spawn_ros2_car.py to examples/
+- Run the test script spawn_ros2_car.py which will spawn a car with autopilot on:
 
 ```bash
+cd test/
 python3 spawn_ros2_car.py
 ros2 topic list
 ```
@@ -63,7 +64,7 @@ ros2 topic list
 /tf
 ```
 
-### Package creation
+### Package creation (In case you need a new one)
 
 ```bash
 cd ~/ros2-adas/ros2-adas/src
@@ -71,6 +72,22 @@ ros2 pkg create lane_detection \
   --build-type ament_python \
   --dependencies rclpy sensor_msgs cv_bridge
 cd ~/ros2-adas/ros2-adas
+```
+
+### Package build (Do after every script change)
+
+With the actorID from the log of the spawn script, update the actorID in lane_detector.py:
+
+```python
+self.subscription = self.create_subscription(
+            Image,
+            '/carla/actor29/front_cam/image',  # <-- update this
+            self.image_callback,
+            10
+        )
+```
+
+```bash
 colcon build --packages-select lane_detection --parallel-workers 1
 source install/setup.bash
 ros2 run lane_detection lane_detector
@@ -88,3 +105,15 @@ eot /tmp/roi.jpg
 
 Explained in docs/Lane Detection Pipeline.pdf
 
+## Troubleshoot
+
+### Port binded error
+
+By default, CarlaUE4 uses port 2000, some services like Traffic Manager (TM) use script defined port (8005). When you stop the script, and then run again, there will be potential error since the last process run is still occupying the port.
+
+Free the port by running:
+
+```bash
+sudo lsof -i:2000
+kill -9 <PID>
+```
