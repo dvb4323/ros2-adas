@@ -1,5 +1,8 @@
+from std_msgs.msg import Float32
+
 import rclpy
 from rclpy.node import Node
+from sensor_msgs import msg
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 
@@ -15,8 +18,14 @@ class LaneDetector(Node):
 
         self.subscription = self.create_subscription(
             Image,
-            '/carla/actor29/front_cam/image',  # <-- update this
+            '/carla/actor147/front_cam/image',  # <-- update this
             self.image_callback,
+            10
+        )
+
+        self.offset_publisher = self.create_publisher(
+            Float32,
+            '/lane_offset',
             10
         )
 
@@ -33,8 +42,12 @@ class LaneDetector(Node):
         self.get_logger().info(f'Offset: {lane_center_offset:.2f}')
         self.frame_id = getattr(self, 'frame_id', 0) + 1
 
-        if self.frame_id % 20 == 0:  # save every 20 frames
+        if self.frame_id % 10 == 0:  # save every 10 frames
             self.save_debug_images(frame, edges, cropped_edges)
+            
+        msg = Float32()
+        msg.data = float(lane_center_offset)
+        self.offset_publisher.publish(msg)
 
     def process_frame(self, frame):
         edges = None

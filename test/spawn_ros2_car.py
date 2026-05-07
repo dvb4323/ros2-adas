@@ -7,7 +7,8 @@ def main():
     client = carla.Client('localhost', 2000)
     client.set_timeout(10.0)
 
-    world = client.get_world()
+    # world = client.get_world()
+    world = client.load_world('Town04')
     print("Connected to CARLA")
     
     settings = world.get_settings()
@@ -42,7 +43,7 @@ def main():
             tm = client.get_trafficmanager(8005)
             tm.set_synchronous_mode(True)
             # 2. Tell the vehicle to listen to the TM
-            vehicle.set_autopilot(True, tm.get_port())
+            vehicle.set_autopilot(False, tm.get_port())
             print(f"Spawned vehicle ID: {vehicle.id}")
             break
 
@@ -108,6 +109,8 @@ def main():
         settings.synchronous_mode = False
         settings.fixed_delta_seconds = None
         world.apply_settings(settings)
+        tm = client.get_trafficmanager(8005)
+        tm.set_synchronous_mode(False)
 
         # 2. Destroy actors
         camera.stop()

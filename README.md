@@ -45,7 +45,7 @@ cd ~/CARLA_0.9.16
 cd PythonAPI/examples
 ```
 
-- Run the test script spawn_ros2_car.py which will spawn a car with autopilot on:
+- Run the test script spawn_ros2_car.py which will spawn a car with autopilot feature (can be turned on/off). You can also modify the map it gets spawned on:
 
 ```bash
 cd test/
@@ -76,7 +76,7 @@ cd ~/ros2-adas/ros2-adas
 
 ### Package build (Do after every script change)
 
-With the actorID from the log of the spawn script, update the actorID in lane_detector.py:
+- With the actorID from the log of the spawn script, update the actorID in lane_detector.py:
 
 ```python
 self.subscription = self.create_subscription(
@@ -87,10 +87,20 @@ self.subscription = self.create_subscription(
         )
 ```
 
+- Build package lane_detection:  
+
 ```bash
 colcon build --packages-select lane_detection --parallel-workers 1
 source install/setup.bash
 ros2 run lane_detection lane_detector
+```
+
+- Build package lane_controller:
+
+```bash
+colcon build --packages-select lane_controller --parallel-workers 1
+source install/setup.bash
+ros2 run lane_controller controller
 ```
 
 ### Check for image processing result
@@ -117,3 +127,8 @@ Free the port by running:
 sudo lsof -i:2000
 kill -9 <PID>
 ```
+
+## Note
+
+- CARLA is resource intensive, is should be run on devices with external GPU (add flag -preferNvidia when run with a Nvidia supported pc)
+- For Lane Keeping Assistant Testing, choose map with long straight road: Town4
