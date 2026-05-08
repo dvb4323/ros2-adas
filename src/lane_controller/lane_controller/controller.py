@@ -66,7 +66,7 @@ class LaneController(Node):
         control = carla.VehicleControl()
 
         # Constant forward movement
-        control.throttle = 0.3
+        control.throttle = 0.2
 
         # Constant steering test
         Kp = 0.01
