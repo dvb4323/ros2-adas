@@ -38,6 +38,14 @@ class LaneController(Node):
             self.offset_callback,
             10
         )
+        
+        # PID initialization
+        self.error_integral = 0.0
+        self.previous_error = 0.0
+        self.Kp = 0.005
+        self.Ki = 0.0001
+        self.Kd = 0.001
+        self.first_run = True
 
     def find_hero_vehicle(self):
 
@@ -62,23 +70,43 @@ class LaneController(Node):
         self.lane_offset = msg.data    
 
     def control_loop(self):
-
+        error = self.lane_offset
+        
+        if self.first_run:
+            self.prev_error = error
+            self.first_run = False
+            return # Skip this frame to let values stabilize
+        
+        # Accumulate integral error
+        self.error_integral += error
+        # Limit integral to prevent windup
+        self.error_integral = max(-5.0, min(5.0, self.error_integral))
+        
+        derivative = error - self.previous_error
+        
+        # PID formula
+        # steer = (self.Kp * error)
+        steer = (self.Kp * error) + (self.Ki * self.error_integral) + (self.Kd * derivative)
+        steer = max(-0.8, min(0.8, steer))
+        
         control = carla.VehicleControl()
 
         # Constant forward movement
-        control.throttle = 0.2
+        control.throttle = 0.15
 
         # Constant steering test
-        Kp = 0.01
-        steer = Kp * self.lane_offset
-        steer = max(-0.5, min(0.5, steer))  # clamp to [-0.5, 0.5]
-        control.steer = steer
+        # Kp = 0.01
+        # steer = Kp * self.lane_offset
+        # steer = max(-0.5, min(0.5, steer))  # clamp to [-0.5, 0.5]
+        control.steer = float(steer)
 
         self.vehicle.apply_control(control)
 
         self.get_logger().info(
             f'Offset={self.lane_offset:.2f}, Steer={steer:.2f}'
         )
+        
+        self.previous_error = error
 
 
 def main(args=None):

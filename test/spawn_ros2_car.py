@@ -57,13 +57,14 @@ def main():
     cam_bp = bp_lib.find('sensor.camera.rgb')
 
     cam_bp.set_attribute('ros_name', 'front_cam')
-    cam_bp.set_attribute('image_size_x', '160')
-    cam_bp.set_attribute('image_size_y', '120')
+    cam_bp.set_attribute('image_size_x', '640')
+    cam_bp.set_attribute('image_size_y', '480')
     cam_bp.set_attribute('sensor_tick', '0.1')
     cam_bp.set_attribute('enable_postprocess_effects', 'false')
 
     cam_transform = carla.Transform(
-        carla.Location(x=1.5, z=2.4)
+        carla.Location(x=1.5, z=2.4),
+        carla.Rotation(pitch=-20)
     )
 
     camera = world.spawn_actor(cam_bp, cam_transform, attach_to=vehicle)

@@ -1,6 +1,7 @@
 from turtle import width
 
 from matplotlib import lines
+from networkx import edges
 
 from std_msgs.msg import Float32
 
@@ -72,14 +73,32 @@ class LaneDetector(Node):
         # 4. ROI mask
         mask = np.zeros_like(edges)
 
-        polygon = np.array([[
-            (0, height),
-            (width, height),
-            (int(width * 0.7), int(height * 0.55)),
-            (int(width * 0.3), int(height * 0.55)),
-        ]], np.int32)
+        # polygon = np.array([[
+        #     (width * 0.1, height),
+        #     (width * 0.9, height),
+        #     (int(width * 0.7), int(height * 0.55)),
+        #     (int(width * 0.3), int(height * 0.55)),
+        # ]], np.int32)
+        
+        # cv2.polylines(frame, [polygon], isClosed=True, color=(0, 255, 0), thickness=2)
 
-        cv2.fillPoly(mask, polygon, 255)
+        # cv2.fillPoly(mask, polygon, 255)
+        
+        # Create two separate masks
+
+        # Define a polygon for the left side of the lane
+        poly_left = np.array([[(int(width*0.1), height), (int(width*0.25), height), 
+                    (int(width*0.35), int(height*0.55)), (int(width*0.25), int(height*0.55))]], np.int32)
+
+        # Define a polygon for the right side of the lane
+        poly_right = np.array([[(int(width*0.75), height), (int(width*0.9), height), 
+                    (int(width*0.75), int(height*0.55)), (int(width*0.65), int(height*0.55))]], np.int32)
+
+        cv2.polylines(frame, [poly_left], isClosed=True, color=(0, 255, 0), thickness=2)
+        cv2.polylines(frame, [poly_right], isClosed=True, color=(0, 255, 0), thickness=2)
+        cv2.fillPoly(mask, [poly_left, poly_right], 255)
+
+        # Extract edges from both sides
         cropped_edges = cv2.bitwise_and(edges, mask)
 
         # 5. Hough Transform
@@ -87,13 +106,13 @@ class LaneDetector(Node):
             cropped_edges,
             rho=1,
             theta=np.pi / 180,
-            threshold=20,
-            minLineLength=10,
-            maxLineGap=5
+            threshold=50,
+            minLineLength=30,
+            maxLineGap=20
         )
 
         if lines is None:
-            return 0.0, edges, cropped_edges
+            return self.previous_offset, edges, cropped_edges
 
         left_lines = []
         right_lines = []
@@ -105,22 +124,22 @@ class LaneDetector(Node):
             if x2 == x1:
                 continue
 
-            slope = (y2 - y1) / (x2 - x1)
+            slope = (y2 - y1) / (x2 - x1) if (x2 != x1) else 999
 
-            if abs(slope) < 0.5:
+            if abs(slope) < 0.1:
                 continue
 
             mid_x = (x1 + x2) / 2
 
-            if mid_x < width / 2:
+            if slope < 0:
                 left_lines.append(line[0])
             else:
                 right_lines.append(line[0])
 
         sample_rows = [
-            int(height * 0.9),  # near
+            int(height * 0.90),  # near
             int(height * 0.75), # middle
-            int(height * 0.6),  # far
+            int(height * 0.60),  # far
         ]
 
         offsets = []
@@ -137,9 +156,10 @@ class LaneDetector(Node):
             if left_x is None or right_x is None:
                 continue
 
-            lane_width = right_x - left_x
+            lane_width = abs(right_x - left_x)
+            self.get_logger().info(f'Row {y}: Lane width={lane_width}')
 
-            if lane_width < 40 or lane_width > 120:
+            if lane_width < 100 or lane_width > 500:
                 continue
 
             lane_center = (left_x + right_x) / 2.0
