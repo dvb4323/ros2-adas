@@ -7,7 +7,24 @@
 - Carla 0.9.16
 - Ubuntu 22.04 LTS
 
+## Project Structure
+
+### Packages List
+
+- lane_controller
+- lane_detection
+- carla_msgs
+
+### Recommended Tools
+
+- ros2 bag, foxglove for debugging
+
 ## Setup Guide
+
+### Prerequisition
+
+- Ros2 installed (Humble for Ubuntu 22.04, Kilted for 24.04)
+- Carla Downloaded
 
 ### Install necessary packages
 
@@ -115,6 +132,29 @@ eot /tmp/roi.jpg
 
 Explained in docs/Lane Detection Pipeline.pdf
 
+## Testing and Debug
+
+### Use ros2 bag to record a session, then playback:
+
+```bash
+ros2 bag record -o recording -s mcap /carla/actor147/front_cam/image /tf /lane_offset /carla/actor147/vehicle_control_cmd
+ros2 bag play recording/rosbag2_2026_05_12-10_44_44_0.mcap
+```
+
+### Debug using Foxglove
+
+- Create an account on Foxglove's homepage, then create a project
+- Install Foxglove:
+
+```bash
+sudo apt install ros-$ROS_DISTRO-foxglove-bridge
+source /opt/ros/<Ros_Version>/setup.sh
+source install/setup.sh
+ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765
+```
+
+- Return to Foxglove Dashboard, open a connection to ws://localhost:8765 using Google Chrome
+
 ## Troubleshoot
 
 ### Port binded error
@@ -132,3 +172,9 @@ kill -9 <PID>
 
 - CARLA is resource intensive, is should be run on devices with external GPU (add flag -preferNvidia when run with a Nvidia supported pc)
 - For Lane Keeping Assistant Testing, choose map with long straight road: Town4
+
+### References
+
+- [Ros2 Humble documentation](https://docs.ros.org/en/humble/index.html)
+- [Carla Documentation](https://carla.readthedocs.io/en/latest/)
+- [Foxglove Homepage](https://app.foxglove.dev/)
