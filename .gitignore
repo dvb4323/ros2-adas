@@ -2,3 +2,4 @@ venv/
 log/
 build/
 install/
+rosbag2_2026_*/
