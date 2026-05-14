@@ -34,7 +34,7 @@ class LaneController(Node):
 
         self.subscription = self.create_subscription(
             Float32,
-            '/lane_offset',
+            '/lane_offset_dl',
             self.offset_callback,
             10
         )

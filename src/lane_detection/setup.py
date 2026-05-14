@@ -26,6 +26,7 @@ setup(
     entry_points={
         'console_scripts': [
             'lane_detector = lane_detection.lane_detector:main',
+            'lane_detector_dl = lane_detection.lane_detector_dl:main',
         ],
     },
 )
